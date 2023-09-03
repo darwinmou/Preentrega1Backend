@@ -1,7 +1,27 @@
+const fs = require("fs");
+
 class ProductManager {
-  constructor() {
+  constructor(filename) {
+    this.filename = filename;
     this.products = [];
     this.length = 0;
+
+    this.loadFromFile();
+  }
+
+  saveToFile() {
+    fs.writeFileSync(this.filename, JSON.stringify(this.products, null, 2));
+  }
+
+  loadFromFile() {
+    try {
+      const data = fs.readFileSync(this.filename, "utf8");
+      this.products = JSON.parse(data);
+      this.length = this.products.length;
+    } catch (error) {
+      this.products = [];
+      this.length = 0;
+    }
   }
 
   addProduct(product) {
@@ -27,6 +47,7 @@ class ProductManager {
     product.id = this.length;
 
     this.products.push(product);
+    this.saveToFile();
   }
 
   getProducts() {
@@ -50,16 +71,20 @@ class ProductManager {
     if (indexToUpdate !== -1) {
       this.products[indexToUpdate] = {
         ...this.products[indexToUpdate],
-        ...updatedProduct,
+        updatedProduct,
       };
       console.log("Producto actualizado exitosamente");
     } else {
       console.log("No se encontró el producto con el ID dado");
     }
+
+    this.saveToFile();
   }
 
   deleteProduct(id) {
-    const indexToDelete = this.products.findIndex(product => product.id === id);
+    const indexToDelete = this.products.findIndex(
+      (product) => product.id === id
+    );
 
     if (indexToDelete !== -1) {
       this.products.splice(indexToDelete, 1);
@@ -67,24 +92,13 @@ class ProductManager {
     } else {
       console.log("No se encontró el producto con el ID dado");
     }
+    this.saveToFile();
   }
-
 }
 
-const productManager = new ProductManager();
+const productManager = new ProductManager("productos.json");
 
-console.log(productManager.getProducts());
 
-productManager.addProduct({
-  title: "producto prueba",
-  description: "Este es un producto prueba",
-  price: 200,
-  thumbnail: "Sin imagen",
-  code: "abc123",
-  stock: 25,
-});
-
-console.log(productManager.getProducts());
 
 productManager.addProduct({
   title: "producto prueba",
@@ -95,12 +109,8 @@ productManager.addProduct({
   stock: 25,
 });
 
-console.log(productManager.getProducById(1));
 
-productManager.getProducById(100);
+productManager.updateProduct(1,{price:50,stock:3})
 
-productManager.updateProduct(1,{price:150, stock: 15})
-console.log(productManager.getProducts());
 
-productManager.deleteProduct(1)
-console.log(productManager.getProducts());
+
